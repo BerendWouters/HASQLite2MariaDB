@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - ./config:/config
+      # - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    # privileged: true
+    # network_mode: host
+    ports:
+    - 8123:8123
+  mysqlmigrator:
+    image: hasqlma
+    volumes:
+      - ./home-assistant_v2.db:/config/home-assistant_v2.db
+    command: sqlite3mysql --sqlite-file /config/home-assistant_v2.db --mysql-database homeassistant --mysql-host mariadb --mysql-user homeassistant-user --mysql-password homeassistant-password --ignore-duplicate-keys
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MARIADB_ROOT_PASSWORD=mypass
+      - MARIADB_DATABASE=homeassistant
+      - MARIADB_USER=homeassistant-user
+      - MARIADB_PASSWORD=homeassistant-password
+      - MARIADB_ROOT_HOST=%
+      - TZ=Europe/Brussels
+    volumes:
+      - ./mariadb-config:/config
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin:latest
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mariadb
+      - UPLOAD_LIMIT=4G
+      - MEMORY_LIMIT=2G
+    depends_on:
+      - mariadb
+    links:
+      - mariadb
