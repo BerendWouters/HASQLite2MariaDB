@@ -13,7 +13,8 @@ services:
     ports:
     - 8123:8123
   mysqlmigrator:
-    image: hasqlma
+    image: mysqlmigrator
+    build: .
     volumes:
       - ./home-assistant_v2.db:/config/home-assistant_v2.db
     command: sqlite3mysql --sqlite-file /config/home-assistant_v2.db --mysql-database homeassistant --mysql-host mariadb --mysql-user homeassistant-user --mysql-password homeassistant-password --ignore-duplicate-keys
